@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class NEWGamemenager : MonoBehaviour
@@ -26,6 +27,8 @@ public class NEWGamemenager : MonoBehaviour
     public static bool AL_1S_shootSkillX = false;
     public static bool Wakamo_useE = false;
     public static bool Wakamo_useC = false; // ✅ C 스킬 사용 여부
+    public static bool Wakamo_useQ = false; // ✅ Q 스킬 사용 여부
+
 
     public GameObject AL1Sgun;
     public GameObject Wakamogun;
@@ -71,6 +74,8 @@ public class NEWGamemenager : MonoBehaviour
         AL1S_SkillX();
         Wakamo_skillE();
         Wakamo_skillC(); // ✅ C 스킬 처리 추가
+        Wakamo_skillX();
+        Wakamo_skillQ();
     }
 
     private void Wakamo_CheckCooldownE()
@@ -93,6 +98,71 @@ public class NEWGamemenager : MonoBehaviour
             Wakamo_mainTextE.color = Color.white;
         }
     }
+
+    public void Wakamo_skillQ()
+    {
+        if (LockinManager.lastSelectedCharacter == "Wakamo" &&
+            Input.GetKeyDown(KeyCode.Q) &&
+            Wakamo_mainTextQ.color == Color.white)
+        {
+            if (SceneManager.GetActiveScene().name == "BossScene")
+            {
+                Wakamo_mainTextQ.color = Color.gray;
+                StartCoroutine(WakamoQSkillCoroutine()); // ✅ 30초간 효과 코루틴 실행
+            }
+            else
+            {
+                Debug.Log("보스씬이 아님");
+            }
+        }
+    }
+    
+    private IEnumerator WakamoQSkillCoroutine()
+    {
+        if (targetUIImage == null)
+        {
+            Debug.LogWarning("targetUIImage is not assigned!");
+            yield break;
+        }
+
+        Wakamo_useQ = true;
+
+        Color originalColor = targetUIImage.color;
+        Color qSkillColor = Color.magenta;
+
+        // 0.5초간 그라데이션으로 진입
+        float durationStart = 0.5f;
+        float elapsed = 0f;
+        while (elapsed < durationStart)
+        {
+            elapsed += Time.deltaTime;
+            targetUIImage.color = Color.Lerp(originalColor, qSkillColor, elapsed / durationStart);
+            yield return null;
+        }
+
+        // 27.5초 유지 (총 28초)
+        yield return new WaitForSeconds(27.5f);
+
+        // 마지막 2초간 깜빡임
+        float blinkDuration = 0.3f;
+        float totalBlinkTime = 2f;
+        elapsed = 0f;
+
+        while (elapsed < totalBlinkTime)
+        {
+            elapsed += Time.deltaTime;
+            if (((int)(elapsed / blinkDuration)) % 2 == 0)
+                targetUIImage.color = qSkillColor;
+            else
+                targetUIImage.color = originalColor;
+            yield return null;
+        }
+
+        targetUIImage.color = originalColor;
+        Wakamo_useQ = false;
+        Debug.Log("Wakamo Q 스킬 종료");
+    }
+
 
     public void Wakamo_skillE()
     {
@@ -128,6 +198,16 @@ public class NEWGamemenager : MonoBehaviour
         Wakamo_mainTextC.color = Color.white;
         Debug.Log("Wakamo C 스킬 종료");
         targetUIImage.color = new Color(0.96f, 0.96f, 0.96f, 1f);
+    }
+
+    public void Wakamo_skillX()
+    {
+        if (Input.GetKeyDown(KeyCode.X) &&
+            Wakamo_mainTextX.color == Color.white &&
+            LockinManager.lastSelectedCharacter == "Wakamo")
+        {
+            NEWSampleLaserClick.useWakamoSkillX();
+        }
     }
 
     public void AL1S_SkillC()

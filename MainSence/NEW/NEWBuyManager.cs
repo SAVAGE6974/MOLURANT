@@ -14,6 +14,7 @@ public class NEWBuyManager : MonoBehaviour
     public Text AL_1S_mainTextX; public static bool canUseSkillX = false; private bool canBuySkillX = true;
 
     public Text Wakamo_mainTextC; public static bool Wakamo_canUseSkillC = false; private bool Wakamo_canBuySkillC = true;
+    public Text Wakamo_mainTextQ; public static bool Wakamo_canUseSkillQ = false; private bool Wakamo_canBuySkillQ = true;
     public Text Wakamo_mainTextX; public static bool Wakamo_canUseSkillX = false; private bool Wakamo_canBuySkillX = true;
     
     private void Awake()
@@ -21,9 +22,20 @@ public class NEWBuyManager : MonoBehaviour
         credits_text.text = credits.ToString();
     }
 
+    public void Wakamo_buySkillQ()
+    {
+        if (Wakamo_mainTextQ.color == Color.gray)
+        {
+            Wakamo_mainTextQ.color = Color.white;
+
+            Wakamo_canUseSkillQ = true;
+            Wakamo_canBuySkillC = false;
+        }
+    }
+    
     public void Wakamo_buySkillC()
     {
-        if (Wakamo_canBuySkillC)
+        if (Wakamo_mainTextC.color == Color.gray)
         {
             Wakamo_mainTextC.color = Color.white;
             
@@ -44,7 +56,7 @@ public class NEWBuyManager : MonoBehaviour
     
     public void AL1S_buy_C()
     {
-        if (credits >= 300 && canBuySkillC)
+        if (credits >= 300 && AL_1S_mainTextC.color == Color.gray)
         {
             credits -= 300;
             credits_text.text = credits.ToString();

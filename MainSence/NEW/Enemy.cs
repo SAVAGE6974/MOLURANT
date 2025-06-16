@@ -31,6 +31,12 @@ public class NEWEnemy : MonoBehaviour
     {
         aoeDamage = 100f;
         isClone = gameObject.name.Contains("(Clone)");
+
+        // boss 태그일 경우 체력 2000으로 설정
+        if (CompareTag("boss"))
+        {
+            enemyHp = 2000f;
+        }
     }
 
     private void Start()
@@ -47,15 +53,27 @@ public class NEWEnemy : MonoBehaviour
 
     private void Update()
     {
-        if (isClone)
+        // clone이거나 boss 태그면 공격하게 함
+        if (isClone || CompareTag("boss"))
         {
             GoAttack();
+        }
+        if (NEWGamemenager.Wakamo_useQ)
+        {
+            Wakamo_damage *= 1.5f; // 또는 원하는 배율
         }
     }
 
     public void Enemyhit()
     {
-        if (!isClone) return;
+        // clone이거나 boss일 때만 공격 처리
+        if (!isClone && !CompareTag("boss")) return;
+
+        if (CompareTag("boss"))
+        {
+            Debug.Log("보스에게 공격됨!");
+            // 필요 시 보스 전용 처리 추가 가능
+        }
 
         if (LockinManager.lastSelectedCharacter == "Wakamo")
         {
@@ -167,7 +185,8 @@ public class NEWEnemy : MonoBehaviour
 
     private IEnumerator AttackTowerRoutine()
     {
-        if (!isClone) yield break;
+        // boss도 공격 루틴 가능
+        if (!isClone && !CompareTag("boss")) yield break;
 
         isAttacking = true;
 

@@ -10,6 +10,11 @@ public class NEWUI : MonoBehaviour
 
     public static NEWUI instance;
 
+    public AudioSource OpenaudioSource;
+    public AudioSource CloseaudioSource;
+    private bool OpenhasPlayed = false;
+    private bool ClosehasPlayed = false;
+
     public Text creditText;
     public Text UpCountdownText;
     public Text AL1S_bulletText;
@@ -60,6 +65,9 @@ public class NEWUI : MonoBehaviour
             Destroy(AL1S_bulletText);
             Wakamo_bulletText.text = Wakamo_bulletCount.ToString("D2");
         }
+
+        Wakamo_hpText.text = Mathf.RoundToInt(MainUI._hp).ToString();
+        AL1S_hpText.text = Mathf.RoundToInt(MainUI._hp).ToString();
     }
 
     private void Start()
@@ -75,7 +83,7 @@ public class NEWUI : MonoBehaviour
             al1SSideBarPanel.SetActive(false);
         }
 
-        StartCoroutine(StartCountdownCycle(3));
+        StartCoroutine(StartCountdownCycle(2));
     }
 
     private void Update()
@@ -90,16 +98,20 @@ public class NEWUI : MonoBehaviour
         if (_hp <= 0)
         {
             losePannel.SetActive(true);
+            Cursor.lockState = CursorLockMode.None;
+            Cursor.visible = true;
             SceneManager.LoadScene("MainMenuScene");
         }
     }
 
     public void UpdateHP()
     {
+        int displayHP = Mathf.RoundToInt(_hp);
+
         if (LockinManager.lastSelectedCharacter == "AL-1S")
-            AL1S_hpText.text = _hp.ToString("F0");
+            AL1S_hpText.text = displayHP.ToString();
         else if (LockinManager.lastSelectedCharacter == "Wakamo")
-            Wakamo_hpText.text = _hp.ToString("F0");
+            Wakamo_hpText.text = displayHP.ToString();
     }
 
     public void AL_1S_buyBullet()
@@ -116,11 +128,16 @@ public class NEWUI : MonoBehaviour
 
     private void AL_1S_reload()
     {
+        int maxBullet = 15;
+
         if (LockinManager.lastSelectedCharacter == "AL-1S" && Input.GetKeyDown(KeyCode.R) &&
-            AL1S_sideBulletCount >= 10)
+            AL1S_sideBulletCount >= 1 && AL1S_bulletCount < maxBullet)
         {
-            AL1S_sideBulletCount -= 10;
-            AL1S_bulletCount += 10;
+            int needed = maxBullet - AL1S_bulletCount;
+            int bulletsToLoad = Mathf.Min(needed, AL1S_sideBulletCount);
+
+            AL1S_sideBulletCount -= bulletsToLoad;
+            AL1S_bulletCount += bulletsToLoad;
             NEWSampleLaserClick.AL1SgunbulletNum = AL1S_bulletCount;
 
             AL1S_bulletText.text = AL1S_bulletCount.ToString("D2");
@@ -130,25 +147,23 @@ public class NEWUI : MonoBehaviour
 
     private void Wakamo_reload()
     {
+        int maxBullet = 10;
+
         if (LockinManager.lastSelectedCharacter != "AL-1S" && Input.GetKeyDown(KeyCode.R) &&
-            Wakamo_sideBulletCount >= 0)
+            Wakamo_sideBulletCount >= 1 && Wakamo_bulletCount < maxBullet)
         {
-            if (Wakamo_sideBulletCount < 8)
-            {
-                Wakamo_bulletCount += Wakamo_sideBulletCount;
-                Wakamo_sideBulletCount = 0;
-            }
-            else
-            {
-                Wakamo_sideBulletCount -= 8;
-                Wakamo_bulletCount += 8;
-            }
+            int needed = maxBullet - Wakamo_bulletCount;
+            int bulletsToLoad = Mathf.Min(needed, Wakamo_sideBulletCount);
+
+            Wakamo_sideBulletCount -= bulletsToLoad;
+            Wakamo_bulletCount += bulletsToLoad;
             NEWSampleLaserClick.WakamogunbulletNum = Wakamo_bulletCount;
 
             Wakamo_bulletText.text = Wakamo_bulletCount.ToString("D2");
             Wakamo_sideBulletText.text = Wakamo_sideBulletCount.ToString("D2");
         }
     }
+
 
     public void buy_hp()
     {
@@ -160,9 +175,9 @@ public class NEWUI : MonoBehaviour
             creditText.text = NEWBuyManager.credits.ToString();
 
             if (LockinManager.lastSelectedCharacter == "AL-1S")
-                AL1S_hpText.text = _hp.ToString("F0");
+                AL1S_hpText.text = Mathf.RoundToInt(_hp).ToString();
             else if (LockinManager.lastSelectedCharacter == "Wakamo")
-                Wakamo_hpText.text = _hp.ToString("F0");
+                Wakamo_hpText.text = Mathf.RoundToInt(_hp).ToString();
         }
     }
 
@@ -170,9 +185,9 @@ public class NEWUI : MonoBehaviour
     {
         _hp--;
         if (LockinManager.lastSelectedCharacter == "AL-1S")
-            AL1S_hpText.text = _hp.ToString("F0");
+            AL1S_hpText.text = Mathf.RoundToInt(_hp).ToString();
         else if (LockinManager.lastSelectedCharacter == "Wakamo")
-            Wakamo_hpText.text = _hp.ToString("F0");
+            Wakamo_hpText.text = Mathf.RoundToInt(_hp).ToString();
     }
 
     public void UseBullet()
@@ -200,6 +215,7 @@ public class NEWUI : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.B) && !isOpenStoreScreen)
         {
             Debug.Log("Open buy panel");
+            OpenaudioSource.Play();
 
             BuyphasePannel.SetActive(false);
             isOpenStoreScreen = true;
@@ -216,6 +232,7 @@ public class NEWUI : MonoBehaviour
         else if ((Input.GetKeyDown(KeyCode.B) || Input.GetKeyDown(KeyCode.Escape)) && isOpenStoreScreen)
         {
             Debug.Log("Close buy panel");
+            CloseaudioSource.Play();
 
             BuyphasePannel.SetActive(true);
             isOpenStoreScreen = false;
@@ -262,7 +279,10 @@ public class NEWUI : MonoBehaviour
             BuyphasePannel.SetActive(true);
             isBuyPanelInteractable = true;
         }
-        Debug.Log("모든 라운드 완료");
+        if (SceneManager.GetActiveScene().name == "BOSSOpening")
+            SceneManager.LoadScene("MainMenuScene");
+        else
+            SceneManager.LoadScene("BOSSOpening");
     }
 
     private IEnumerator Countdown(int duration)

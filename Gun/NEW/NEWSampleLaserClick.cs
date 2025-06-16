@@ -4,13 +4,16 @@ using UnityEngine.UI;
 
 public class NEWSampleLaserClick : MonoBehaviour
 {
+    public AudioSource WakamoSound;
+    public AudioSource Al1Sound;
+    
     public Image targetUIImage;
     
     public static NEWSampleLaserClick instance;
     public NEWUI ui;
 
     [Header("레이저 오브젝트 할당")]
-    public GameObject laserObject; // 시각적 레이저 오브젝트 (외부에서 할당)
+    public GameObject laserObject;
 
     private Collider _collider;
     private MeshRenderer _meshRenderer;
@@ -22,7 +25,6 @@ public class NEWSampleLaserClick : MonoBehaviour
     public static int WakamogunbulletNum = 8;
     public static int AL1SgunbulletNum = 8;
 
-    // DisableLaserTemporarily 코루틴 핸들
     private Coroutine disableLaserCoroutine;
 
     private void Awake()
@@ -72,6 +74,66 @@ public class NEWSampleLaserClick : MonoBehaviour
         }
     }
 
+    public static void useWakamoSkillX()
+    {
+        if (instance == null || instance.laserObject == null) return;
+
+        Debug.Log("Wakamo X 스킬 발동: 20초 동안 공격 범위 증가");
+
+        // CapsuleCollider가 존재한다면 radius 키움
+        if (instance._collider is CapsuleCollider capsule)
+        {
+            capsule.radius = 1f;
+        }
+
+        // 레이저 오브젝트 스케일 증가 (폭, 깊이)
+        Vector3 scale = instance.laserObject.transform.localScale;
+        scale.x = 2f;
+        scale.z = 2f;
+        instance.laserObject.transform.localScale = scale;
+
+        // 시각적 효과: 레이저 활성화
+        if (instance._collider != null)
+            instance._collider.enabled = true;
+
+        if (instance._meshRenderer != null)
+            instance._meshRenderer.enabled = true;
+
+        // 레이저 발사 실행
+        instance.FireWideLaser();
+
+        // ⚠️ 20초 동안 범위 확대 유지
+        instance.StopAllCoroutines();
+        instance.StartCoroutine(instance.DisableLaserAfter20Seconds());
+    }
+
+    private IEnumerator DisableLaserAfter20Seconds()
+    {
+        // ▶ 20초 동안 실행됨
+        yield return new WaitForSeconds(20f);
+        NEWEnemy.Wakamo_damage += 20;
+
+        // 레이저 시각적 비활성화
+        if (_collider != null)
+            _collider.enabled = false;
+
+        if (_meshRenderer != null)
+            _meshRenderer.enabled = false;
+
+        // 스케일 원상복구
+        if (laserObject != null)
+            laserObject.transform.localScale = new Vector3(0.1f, 1.25f, 0.1f);
+
+        if (_collider is CapsuleCollider capsule)
+        {
+            capsule.radius = 0.5f;
+        }
+
+        Debug.Log("Wakamo X 스킬 종료: 공격 범위 정상화");
+        NEWEnemy.Wakamo_damage -= 20;
+    }
+
+
     private void Update()
     {
         if (Input.GetMouseButtonDown(0) && NEWUI.canFire)
@@ -82,6 +144,7 @@ public class NEWSampleLaserClick : MonoBehaviour
                 {
                     ActivateLaser();
                     FireLaser();
+                    StartCoroutine(PlayWakamoSound()); // 변경된 부분
 
                     ui.UseBullet();
                     Debug.Log("Wakamo 총알 수 감소: " + WakamogunbulletNum);
@@ -98,6 +161,7 @@ public class NEWSampleLaserClick : MonoBehaviour
                 {
                     ActivateLaser();
                     FireLaser();
+                    Al1Sound.Play();
 
                     ui.UseBullet();
                     Debug.Log("AL-1S 총알 수 감소: " + AL1SgunbulletNum);
@@ -105,6 +169,13 @@ public class NEWSampleLaserClick : MonoBehaviour
                 }
             }
         }
+    }
+
+    private IEnumerator PlayWakamoSound()
+    {
+        WakamoSound.Play();
+        yield return new WaitForSeconds(WakamoSound.clip.length);
+        Debug.Log("사운드 재생 완료");
     }
 
     public void AL1S_use_Q()
@@ -117,7 +188,7 @@ public class NEWSampleLaserClick : MonoBehaviour
     {
         float duration = 8f;
         float elapsed = 0f;
-        float interval = 0.2f; // 0.2초마다 레이저 발사
+        float interval = 0.2f;
 
         while (elapsed < duration)
         {
@@ -180,7 +251,7 @@ public class NEWSampleLaserClick : MonoBehaviour
                 NEWEnemy enemy = hit.collider.GetComponent<NEWEnemy>();
                 if (enemy != null)
                 {
-                    enemy.Enemyhit(); // 기본 데미지 (100)
+                    enemy.Enemyhit();
                 }
             }
 
@@ -206,7 +277,6 @@ public class NEWSampleLaserClick : MonoBehaviour
                     enemy.Enemyhit();
                     Debug.Log("궁 데미지: " + NEWEnemy.AL_1S_damage);
 
-                    // 이후 기본으로 복원
                     NEWEnemy.AL_1S_damage = 100;
                 }
             }
@@ -214,7 +284,7 @@ public class NEWSampleLaserClick : MonoBehaviour
             Debug.DrawLine(ray.origin, hit.point, Color.magenta, 1f);
         }
     }
-    
+
     public static void fireE()
     {
         if (instance == null || instance.laserObject == null) return;
