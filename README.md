@@ -1,5 +1,5 @@
 DOWNLOAD MOLURNAT LINK: https://drive.google.com/file/d/14unFN0GUAkJhCu4btdidlb1WTKUtDoou/view?usp=share_link
-This App is only macOS. not abel to play by Windows.
+This App is only macOS. not able to play by Windows.
 
 DOWNLOAD UNITY PACKAGE: https://drive.google.com/file/d/16Bc3HQpJ_OcoAq3mfsQpas5tEbxmti4j/view?usp=share_link
 
